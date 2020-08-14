@@ -3,6 +3,13 @@
     using System;
     using System.Runtime.InteropServices;
     using Microsoft.VisualStudio.Shell;
+    using System.Collections.Generic;
+    using System.Text;
+    using System.Windows.Controls;
+    using Microsoft.Internal.VisualStudio.PlatformUI;
+    using Microsoft.VisualStudio;
+    using Microsoft.VisualStudio.PlatformUI;
+    using Microsoft.VisualStudio.Shell.Interop;
 
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.
@@ -34,6 +41,106 @@
         public override bool SearchEnabled
         {
             get { return true; }
+        }
+
+        public override IVsSearchTask CreateSearch(uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback)
+        {
+            if (pSearchQuery == null || pSearchCallback == null)
+                return null;
+            return new CovidWindowTask(dwCookie, pSearchQuery, pSearchCallback, this);
+        }
+
+        public override void ClearSearch()
+        {
+            CovidWindowControl control = (CovidWindowControl)this.Content;
+            control.SearchResultsTextBox.Text = control.SearchContent;
+        }
+
+        public override void ProvideSearchSettings(IVsUIDataSource pSearchSettings)
+        {
+            Utilities.SetValue(pSearchSettings,
+                SearchSettingsDataSource.SearchProgressTypeProperty.Name,
+                 (uint)VSSEARCHPROGRESSTYPE.SPT_DETERMINATE);
+        }
+
+        internal class CovidWindowTask : VsSearchTask
+        {
+            private CovidWindow m_toolWindow;
+
+            public CovidWindowTask(uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback, CovidWindow toolwindow)
+                : base(dwCookie, pSearchQuery, pSearchCallback)
+            {
+                m_toolWindow = toolwindow;
+            }
+
+            protected override void OnStartSearch()
+            {
+                // Use the original content of the text box as the target of the search.
+                var separator = new string[] { Environment.NewLine };
+                CovidWindowControl control = (CovidWindowControl)m_toolWindow.Content;
+                string[] contentArr = control.SearchContent.Split(separator, StringSplitOptions.None);
+
+                // Get the search option.
+                bool matchCase = false;
+                // matchCase = m_toolWindow.MatchCaseOption.Value;
+
+                // Set variables that are used in the finally block.
+                StringBuilder sb = new StringBuilder("");
+                uint resultCount = 0;
+                this.ErrorCode = VSConstants.S_OK;
+
+                try
+                {
+                    string searchString = this.SearchQuery.SearchString;
+
+                    // Determine the results.
+                    uint progress = 0;
+                    foreach (string line in contentArr)
+                    {
+                        if (matchCase == true)
+                        {
+                            if (line.Contains(searchString))
+                            {
+                                sb.AppendLine(line);
+                                resultCount++;
+                            }
+                        }
+                        else
+                        {
+                            if (line.ToLower().Contains(searchString.ToLower()))
+                            {
+                                sb.AppendLine(line);
+                                resultCount++;
+                            }
+                        }
+
+                        SearchCallback.ReportProgress(this, progress++, (uint)contentArr.GetLength(0));
+
+                        // Uncomment the following line to demonstrate the progress bar.
+                        //System.Threading.Thread.Sleep(100);
+                    }
+                }
+                catch (Exception e)
+                {
+                    this.ErrorCode = VSConstants.E_FAIL;
+                }
+                finally
+                {
+                    ThreadHelper.Generic.Invoke(() =>
+                    { ((TextBox)((CovidWindowControl)m_toolWindow.Content).SearchResultsTextBox).Text = sb.ToString(); });
+
+                    this.SearchResults = resultCount;
+                }
+
+                // Call the implementation of this method in the base class.
+                // This sets the task status to complete and reports task completion.
+                base.OnStartSearch();
+            }
+
+            protected override void OnStopSearch()
+            {
+                this.SearchResults = 0;
+            }
         }
     }
 }
