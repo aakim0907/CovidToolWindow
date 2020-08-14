@@ -30,5 +30,10 @@
             // the object returned by the Content property.
             this.Content = new CovidWindowControl();
         }
+
+        public override bool SearchEnabled
+        {
+            get { return true; }
+        }
     }
 }

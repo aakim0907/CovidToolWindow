@@ -10,9 +10,17 @@
              d:DesignHeight="300" d:DesignWidth="300"
              Name="MyToolWindow">
     <Grid>
-        <StackPanel Orientation="Vertical">
+        <!--<StackPanel Orientation="Vertical">
             <TextBlock Margin="10" HorizontalAlignment="Center">CovidWindow</TextBlock>
             <Button Content="Click me!" Click="button1_Click" Width="120" Height="80" Name="button1"/>
+        </StackPanel>-->
+
+        <StackPanel Orientation="Vertical">
+            <TextBox Name="resultsTextBox" 
+                Height="800.0"
+                Width="800.0"
+                IsReadOnly="True">
+            </TextBox>
         </StackPanel>
     </Grid>
 </UserControl>
