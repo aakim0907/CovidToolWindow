@@ -17,7 +17,7 @@
 
         <StackPanel Orientation="Vertical">
             <TextBox Name="resultsTextBox" 
-                Height="800.0"
+                Height="500.0"
                 Width="800.0"
                 IsReadOnly="True">
             </TextBox>

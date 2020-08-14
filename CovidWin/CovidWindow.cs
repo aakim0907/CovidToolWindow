@@ -10,6 +10,9 @@
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell.Interop;
+    using RestSharp;
+    using Newtonsoft.Json;
+    //using System.Collections.Generic;
 
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.
@@ -30,7 +33,7 @@
         /// </summary>
         public CovidWindow() : base(null)
         {
-            this.Caption = "CovidWindow";
+            this.Caption = "See how COVID is going on";
 
             // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
             // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
@@ -58,9 +61,38 @@
 
         public override void ProvideSearchSettings(IVsUIDataSource pSearchSettings)
         {
+            // for search to happen on enter 
+            // SST_INSTANT for real-time
+            Utilities.SetValue(pSearchSettings,
+                SearchSettingsDataSource.SearchStartTypeProperty.Name,
+                (uint)VSSEARCHSTARTTYPE.SST_ONDEMAND);
+            // show progress bar
             Utilities.SetValue(pSearchSettings,
                 SearchSettingsDataSource.SearchProgressTypeProperty.Name,
                  (uint)VSSEARCHPROGRESSTYPE.SPT_DETERMINATE);
+        }
+
+        internal class CovidTestingSite
+        {
+            public string name { get; set; }
+            public string alternate_name { get; set; }
+            public string description { get; set; }
+            public string updated { get; set; }
+            public List<Address> physical_address { get; set; }
+            public List<Number> phones { get; set; }
+
+            internal class Address
+            {
+                public string address_1 { get; set; }
+                public string region { get; set; }
+                public string city { get; set; }
+                public string postal_code { get; set; }
+            }
+
+            internal class Number
+            {
+                public string number { get; set; }
+            }
         }
 
         internal class CovidWindowTask : VsSearchTask
@@ -78,11 +110,9 @@
                 // Use the original content of the text box as the target of the search.
                 var separator = new string[] { Environment.NewLine };
                 CovidWindowControl control = (CovidWindowControl)m_toolWindow.Content;
-                string[] contentArr = control.SearchContent.Split(separator, StringSplitOptions.None);
 
-                // Get the search option.
-                bool matchCase = false;
-                // matchCase = m_toolWindow.MatchCaseOption.Value;
+                //string[] contentArr = control.SearchContent.Split(separator, StringSplitOptions.None);
+                string[] contentArr = { "1 go", "2 good", "3 Go", "4 Good", "5 Goodbye", "6 goodbye" };
 
                 // Set variables that are used in the finally block.
                 StringBuilder sb = new StringBuilder("");
@@ -93,32 +123,33 @@
                 {
                     string searchString = this.SearchQuery.SearchString;
 
+                    var client = new RestClient($"https://covid-19-testing.github.io/locations/{searchString}/complete.json");
+                    client.Timeout = -1;
+                    var request = new RestRequest(Method.GET);
+                    IRestResponse response = client.Execute(request);
+                    var testingSites = JsonConvert.DeserializeObject<List<CovidTestingSite>>(response.Content);
+
+                    foreach (CovidTestingSite site in testingSites)
+                    {
+                        sb.AppendLine(site.name);
+                    }
+
+
                     // Determine the results.
                     uint progress = 0;
-                    foreach (string line in contentArr)
-                    {
-                        if (matchCase == true)
-                        {
-                            if (line.Contains(searchString))
-                            {
-                                sb.AppendLine(line);
-                                resultCount++;
-                            }
-                        }
-                        else
-                        {
-                            if (line.ToLower().Contains(searchString.ToLower()))
-                            {
-                                sb.AppendLine(line);
-                                resultCount++;
-                            }
-                        }
+                    //foreach (string line in contentArr)
+                    //{
+                    //    if (line.ToLower().Contains(searchString.ToLower()))
+                    //    {
+                    //        sb.AppendLine(line);
+                    //        resultCount++;
+                    //    }
 
-                        SearchCallback.ReportProgress(this, progress++, (uint)contentArr.GetLength(0));
+                    //SearchCallback.ReportProgress(this, progress++, (uint)contentArr.GetLength(0));
 
-                        // Uncomment the following line to demonstrate the progress bar.
-                        //System.Threading.Thread.Sleep(100);
-                    }
+                    //    // Uncomment the following line to demonstrate the progress bar.
+                    //    //System.Threading.Thread.Sleep(100);
+                    //}
                 }
                 catch (Exception e)
                 {
