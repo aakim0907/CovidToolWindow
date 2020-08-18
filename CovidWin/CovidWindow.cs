@@ -13,6 +13,8 @@
     using RestSharp;
     using Newtonsoft.Json;
     //using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Linq;
 
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.
@@ -72,29 +74,6 @@
                  (uint)VSSEARCHPROGRESSTYPE.SPT_DETERMINATE);
         }
 
-        internal class CovidTestingSite
-        {
-            public string name { get; set; }
-            public string alternate_name { get; set; }
-            public string description { get; set; }
-            public string updated { get; set; }
-            public List<Address> physical_address { get; set; }
-            public List<Number> phones { get; set; }
-
-            internal class Address
-            {
-                public string address_1 { get; set; }
-                public string region { get; set; }
-                public string city { get; set; }
-                public string postal_code { get; set; }
-            }
-
-            internal class Number
-            {
-                public string number { get; set; }
-            }
-        }
-
         internal class CovidWindowTask : VsSearchTask
         {
             private CovidWindow m_toolWindow;
@@ -108,16 +87,19 @@
             protected override void OnStartSearch()
             {
                 // Use the original content of the text box as the target of the search.
-                var separator = new string[] { Environment.NewLine };
+                //var separator = new string[] { Environment.NewLine };
                 CovidWindowControl control = (CovidWindowControl)m_toolWindow.Content;
 
                 //string[] contentArr = control.SearchContent.Split(separator, StringSplitOptions.None);
-                string[] contentArr = { "1 go", "2 good", "3 Go", "4 Good", "5 Goodbye", "6 goodbye" };
+                //string[] contentArr = { "1 go", "2 good", "3 Go", "4 Good", "5 Goodbye", "6 goodbye" };
 
                 // Set variables that are used in the finally block.
-                StringBuilder sb = new StringBuilder("");
-                uint resultCount = 0;
+                //StringBuilder sb = new StringBuilder("");
+                //uint resultCount = 0;
                 this.ErrorCode = VSConstants.S_OK;
+
+                ObservableCollection<SiteItem> Sites = new ObservableCollection<SiteItem>();
+
 
                 try
                 {
@@ -128,10 +110,22 @@
                     var request = new RestRequest(Method.GET);
                     IRestResponse response = client.Execute(request);
                     var testingSites = JsonConvert.DeserializeObject<List<CovidTestingSite>>(response.Content);
+                    var sortedSites = testingSites.OrderByDescending(site => site.updated).ToList();
 
-                    foreach (CovidTestingSite site in testingSites)
+                    foreach (CovidTestingSite site in sortedSites)
                     {
-                        sb.AppendLine(site.name);
+                        var number = "";
+                        var address = "";
+                        if (site.phones != null)
+                        {
+                            number = site.phones[0].number;
+                        }
+                        if (site.physical_address != null)
+                        {
+                            var current = site.physical_address[0];
+                            address = $"{current.address_1}, {current.city} ({current.postal_code})";
+                        }
+                        Sites.Add(new SiteItem(site.name, site.description, site.updated, address, number));
                     }
 
 
@@ -157,10 +151,14 @@
                 }
                 finally
                 {
-                    ThreadHelper.Generic.Invoke(() =>
-                    { ((TextBox)((CovidWindowControl)m_toolWindow.Content).SearchResultsTextBox).Text = sb.ToString(); });
+                    //ThreadHelper.Generic.Invoke(() =>
+                    //{ ((TextBox)((CovidWindowControl)m_toolWindow.Content).SearchResultsTextBox).Text = sb.ToString(); });                    
 
-                    this.SearchResults = resultCount;
+                    //this.SearchResults = resultCount;
+
+                    ThreadHelper.Generic.Invoke(() =>
+                    { ((CovidWindowControl)m_toolWindow.Content).SearchResultsList = Sites; 
+                        ((CovidWindowControl)m_toolWindow.Content).DataContext = Sites; });
                 }
 
                 // Call the implementation of this method in the base class.

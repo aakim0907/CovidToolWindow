@@ -4,6 +4,8 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Text;
+    using System.Collections.ObjectModel;
+    using System.Xaml;
 
     /// <summary>
     /// Interaction logic for CovidWindowControl.
@@ -12,15 +14,19 @@
     {
         public TextBox SearchResultsTextBox { get; set; }
         public string SearchContent { get; set; }
+        public ObservableCollection<SiteItem> SearchResultsList { get; set; }
 
         public CovidWindowControl()
         {
             InitializeComponent();
 
-            this.SearchResultsTextBox = resultsTextBox;
+            //this.SearchResultsTextBox = resultsTextBox;
             //this.SearchContent = BuildContent();
 
-            this.SearchResultsTextBox.Text = this.SearchContent;
+            //this.SearchResultsTextBox.Text = this.SearchContent;
+
+            this.DataContext = this.SearchResultsList;
+            //this.SearchResultsList = resultsList;
         }
 
         //private string BuildContent()
