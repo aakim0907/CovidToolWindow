@@ -20,27 +20,14 @@
                     <DataTemplate DataType="local:SearchResultsList">
                         <StackPanel AutomationProperties.Name="{Binding Name}" MaxWidth="360" >
                             <TextBlock FontSize="14" FontWeight="DemiBold" Margin="7,7,0,0" Text="{Binding Name}" TextWrapping="Wrap"/>
-                            <TextBlock FontStyle="Italic" Margin="7,3,0,3" Opacity=".6" >
+                            <TextBlock Margin="7,3,0,0" Opacity=".8" Text="{Binding Number}" TextWrapping="Wrap" />
+                            <TextBlock Margin="7,3,0,0" Opacity=".8" Text="{Binding Address}" TextWrapping="Wrap" />
+                            <!--<TextBlock Margin="7,0,0,10" Opacity=".6" Text="{Binding Description}" TextWrapping="Wrap"/>-->
+                            <TextBlock FontStyle="Italic" Margin="7,3,0,5" Opacity=".6" >
                                 <Run>Last Updated :</Run>
                                 <Run Text="{Binding Updated}"/>
                             </TextBlock>
-                            <TextBlock Margin="7,0,0,0" Opacity=".8" Text="{Binding Number}" TextWrapping="Wrap" />
-                            <TextBlock Margin="7,0,0,0" Opacity=".8" Text="{Binding Address}" TextWrapping="Wrap" />
-                            <TextBlock Margin="7,0,0,10" Opacity=".6" Text="{Binding Description}" TextWrapping="Wrap" />
                         </StackPanel>
-                        <!--<Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Name}" Margin="10,6,0,0" TextWrapping="Wrap" Width="250" FontSize="14" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="1" Grid.Row="2"  Margin="10,0,0,6" TextWrapping="Wrap" Width="250">
-                                <Run>Updated :</Run>
-                                <Run Text="{Binding Updated}"/>
-                            </TextBlock>
-                            <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding Description}" Margin="10,0,0,6" TextWrapping="Wrap" Width="250"/>
-                        </Grid>-->
                     </DataTemplate>
                 </ListView.ItemTemplate> 
                

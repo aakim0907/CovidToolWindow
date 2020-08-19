@@ -35,7 +35,7 @@
         /// </summary>
         public CovidWindow() : base(null)
         {
-            this.Caption = "See how COVID is going on";
+            this.Caption = "What's Going On With COVID";
 
             // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
             // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
@@ -123,7 +123,7 @@
                         if (site.physical_address != null)
                         {
                             var current = site.physical_address[0];
-                            address = $"{current.address_1}, {current.city} ({current.postal_code})";
+                            address = $"{current.address_1}, {current.city} {current.postal_code}";
                         }
                         Sites.Add(new SiteItem(site.name, site.description, site.updated, address, number));
                     }
