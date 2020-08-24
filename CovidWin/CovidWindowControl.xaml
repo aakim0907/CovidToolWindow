@@ -18,7 +18,7 @@
                 ScrollViewer.VerticalScrollBarVisibility="Hidden">
                 <ListView.ItemTemplate>
                     <DataTemplate DataType="local:SearchResultsList">
-                        <StackPanel AutomationProperties.Name="{Binding Name}" MaxWidth="360" >
+                        <StackPanel AutomationProperties.Name="{Binding Name}" MaxWidth="360" MouseDown="OnSiteClick" >
                             <TextBlock FontSize="14" FontWeight="DemiBold" Margin="7,7,0,0" Text="{Binding Name}" TextWrapping="Wrap"/>
                             <TextBlock Margin="7,3,0,0" Opacity=".8" Text="{Binding Number}" TextWrapping="Wrap" />
                             <TextBlock Margin="7,3,0,0" Opacity=".8" Text="{Binding Address}" TextWrapping="Wrap" />

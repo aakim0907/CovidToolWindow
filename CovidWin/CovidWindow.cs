@@ -58,7 +58,9 @@
         public override void ClearSearch()
         {
             CovidWindowControl control = (CovidWindowControl)this.Content;
-            control.SearchResultsTextBox.Text = control.SearchContent;
+            //control.SearchResultsTextBox.Text = control.SearchContent;
+            //((CovidWindowControl)m_toolWindow.Content).SearchResultsList = Sites;
+            //((CovidWindowControl)m_toolWindow.Content).DataContext = Sites;
         }
 
         public override void ProvideSearchSettings(IVsUIDataSource pSearchSettings)
@@ -86,20 +88,10 @@
 
             protected override void OnStartSearch()
             {
-                // Use the original content of the text box as the target of the search.
-                //var separator = new string[] { Environment.NewLine };
                 CovidWindowControl control = (CovidWindowControl)m_toolWindow.Content;
-
-                //string[] contentArr = control.SearchContent.Split(separator, StringSplitOptions.None);
-                //string[] contentArr = { "1 go", "2 good", "3 Go", "4 Good", "5 Goodbye", "6 goodbye" };
-
-                // Set variables that are used in the finally block.
-                //StringBuilder sb = new StringBuilder("");
-                //uint resultCount = 0;
-                this.ErrorCode = VSConstants.S_OK;
-
                 ObservableCollection<SiteItem> Sites = new ObservableCollection<SiteItem>();
 
+                this.ErrorCode = VSConstants.S_OK;
 
                 try
                 {
@@ -127,23 +119,6 @@
                         }
                         Sites.Add(new SiteItem(site.name, site.description, site.updated, address, number));
                     }
-
-
-                    // Determine the results.
-                    uint progress = 0;
-                    //foreach (string line in contentArr)
-                    //{
-                    //    if (line.ToLower().Contains(searchString.ToLower()))
-                    //    {
-                    //        sb.AppendLine(line);
-                    //        resultCount++;
-                    //    }
-
-                    //SearchCallback.ReportProgress(this, progress++, (uint)contentArr.GetLength(0));
-
-                    //    // Uncomment the following line to demonstrate the progress bar.
-                    //    //System.Threading.Thread.Sleep(100);
-                    //}
                 }
                 catch (Exception e)
                 {
@@ -151,14 +126,11 @@
                 }
                 finally
                 {
-                    //ThreadHelper.Generic.Invoke(() =>
-                    //{ ((TextBox)((CovidWindowControl)m_toolWindow.Content).SearchResultsTextBox).Text = sb.ToString(); });                    
-
-                    //this.SearchResults = resultCount;
-
                     ThreadHelper.Generic.Invoke(() =>
-                    { ((CovidWindowControl)m_toolWindow.Content).SearchResultsList = Sites; 
-                        ((CovidWindowControl)m_toolWindow.Content).DataContext = Sites; });
+                    { 
+                        ((CovidWindowControl)m_toolWindow.Content).SearchResultsList = Sites; 
+                        ((CovidWindowControl)m_toolWindow.Content).DataContext = Sites; 
+                    });
                 }
 
                 // Call the implementation of this method in the base class.

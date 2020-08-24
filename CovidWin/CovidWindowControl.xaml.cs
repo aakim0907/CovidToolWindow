@@ -3,9 +3,9 @@
     using System.Diagnostics.CodeAnalysis;
     using System.Windows;
     using System.Windows.Controls;
-    using System.Text;
     using System.Collections.ObjectModel;
-    using System.Xaml;
+    using Microsoft.VisualStudio.Shell;
+    using System.Text.RegularExpressions;
 
     /// <summary>
     /// Interaction logic for CovidWindowControl.
@@ -29,27 +29,6 @@
             //this.SearchResultsList = resultsList;
         }
 
-        //private string BuildContent()
-        //{
-        //    StringBuilder sb = new StringBuilder();
-        //    sb.AppendLine("1 go");
-        //    sb.AppendLine("2 good");
-        //    sb.AppendLine("3 Go");
-        //    sb.AppendLine("4 Good");
-        //    sb.AppendLine("5 goodbye");
-        //    sb.AppendLine("6 Goodbye");
-
-        //    return sb.ToString();
-        //}
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CovidWindowControl"/> class.
-        /// </summary>
-        //public CovidWindowControl()
-        //{
-        //    this.InitializeComponent();
-        //}
-
         /// <summary>
         /// Handles click on the button by displaying a message box.
         /// </summary>
@@ -57,11 +36,17 @@
         /// <param name="e">The event args.</param>
         //[SuppressMessage("Microsoft.Globalization", "CA1300:SpecifyMessageBoxOptions", Justification = "Sample code")]
         //[SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Default event handler naming pattern")]
-        //private void button1_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MessageBox.Show(
-        //        string.Format(System.Globalization.CultureInfo.CurrentUICulture, "Invoked '{0}'", this.ToString()),
-        //        "CovidWindow");
-        //}
+        private void OnSiteClick(object sender, RoutedEventArgs e)
+        {
+            //MessageBox.Show(
+            //    string.Format(System.Globalization.CultureInfo.CurrentUICulture, "Invoked '{0}'", this.ToString()),
+            //    "CovidWindow");
+
+            //var query = sender.InheritanceParent.CacheModeChangedHandler.Target.Content.Name + ' ' + sender.InheritanceParent.CacheModeChangedHandler.Target.Content.Address;
+            // content or data context
+            //var uri = "https://www.bing.com/maps?q=" + Regex.Replace(query, @"\s+", "+");
+            //var name = e.OriginalSource.Inlines.FirstInline.Text;
+            VsShellUtilities.OpenSystemBrowser("https://www.bing.com/maps");
+        }
     }
 }
