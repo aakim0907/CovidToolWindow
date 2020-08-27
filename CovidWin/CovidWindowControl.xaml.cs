@@ -2,7 +2,6 @@
 {
     using System.Windows;
     using System.Windows.Controls;
-    using System.Collections.ObjectModel;
     using Microsoft.VisualStudio.Shell;
 
     /// <summary>
@@ -10,12 +9,9 @@
     /// </summary>
     public partial class CovidWindowControl : UserControl
     {
-        public ObservableCollection<SiteItem> SearchResultsList { get; set; }
-
         public CovidWindowControl()
         {
             InitializeComponent();
-            this.DataContext = this.SearchResultsList;
         }
 
         public void ShowErrorMessage(string errorMessage)
