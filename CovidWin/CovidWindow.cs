@@ -4,15 +4,11 @@
     using System.Runtime.InteropServices;
     using Microsoft.VisualStudio.Shell;
     using System.Collections.Generic;
-    using System.Text;
-    using System.Windows.Controls;
     using Microsoft.Internal.VisualStudio.PlatformUI;
-    using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell.Interop;
     using RestSharp;
     using Newtonsoft.Json;
-    //using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
 
@@ -35,11 +31,7 @@
         /// </summary>
         public CovidWindow() : base(null)
         {
-            this.Caption = "What's Going On With COVID";
-
-            // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
-            // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
-            // the object returned by the Content property.
+            this.Caption = "COVID19 Testing Sites";
             this.Content = new CovidWindowControl();
         }
 
@@ -55,92 +47,60 @@
             return new CovidWindowTask(dwCookie, pSearchQuery, pSearchCallback, this);
         }
 
-        public override void ClearSearch()
-        {
-            CovidWindowControl control = (CovidWindowControl)this.Content;
-            //control.SearchResultsTextBox.Text = control.SearchContent;
-            //((CovidWindowControl)m_toolWindow.Content).SearchResultsList = Sites;
-            //((CovidWindowControl)m_toolWindow.Content).DataContext = Sites;
-        }
-
         public override void ProvideSearchSettings(IVsUIDataSource pSearchSettings)
         {
-            // for search to happen on enter 
-            // SST_INSTANT for real-time
-            Utilities.SetValue(pSearchSettings,
-                SearchSettingsDataSource.SearchStartTypeProperty.Name,
-                (uint)VSSEARCHSTARTTYPE.SST_ONDEMAND);
-            // show progress bar
-            Utilities.SetValue(pSearchSettings,
-                SearchSettingsDataSource.SearchProgressTypeProperty.Name,
-                 (uint)VSSEARCHPROGRESSTYPE.SPT_DETERMINATE);
+            // Trigger search on enter. SST_INSTANT for real-time search.
+            Utilities.SetValue(pSearchSettings, SearchSettingsDataSource.SearchStartTypeProperty.Name, (uint)VSSEARCHSTARTTYPE.SST_ONDEMAND);
         }
 
         internal class CovidWindowTask : VsSearchTask
         {
-            private CovidWindow m_toolWindow;
+            private CovidWindow CovidToolWindow;
+            private ObservableCollection<SiteItem> TestingSites;
 
-            public CovidWindowTask(uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback, CovidWindow toolwindow)
-                : base(dwCookie, pSearchQuery, pSearchCallback)
+            public CovidWindowTask(uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback, CovidWindow toolwindow) : base(dwCookie, pSearchQuery, pSearchCallback)
             {
-                m_toolWindow = toolwindow;
+                CovidToolWindow = toolwindow;
             }
 
             protected override void OnStartSearch()
             {
-                CovidWindowControl control = (CovidWindowControl)m_toolWindow.Content;
-                ObservableCollection<SiteItem> Sites = new ObservableCollection<SiteItem>();
-
-                this.ErrorCode = VSConstants.S_OK;
-
+                TestingSites = new ObservableCollection<SiteItem>();
+                
                 try
                 {
                     string searchString = this.SearchQuery.SearchString;
-
                     var client = new RestClient($"https://covid-19-testing.github.io/locations/{searchString}/complete.json");
-                    client.Timeout = -1;
                     var request = new RestRequest(Method.GET);
                     IRestResponse response = client.Execute(request);
+
                     var testingSites = JsonConvert.DeserializeObject<List<CovidTestingSite>>(response.Content);
                     var sortedSites = testingSites.OrderByDescending(site => site.updated).ToList();
 
                     foreach (CovidTestingSite site in sortedSites)
                     {
-                        var number = "";
+                        var number = site.phones != null ? site.phones[0].number : "";
                         var address = "";
-                        if (site.phones != null)
-                        {
-                            number = site.phones[0].number;
-                        }
                         if (site.physical_address != null)
                         {
                             var current = site.physical_address[0];
                             address = $"{current.address_1}, {current.city} {current.postal_code}";
                         }
-                        Sites.Add(new SiteItem(site.name, site.description, site.updated, address, number));
+                        TestingSites.Add(new SiteItem(site.name, site.description, site.updated, address, number));
                     }
                 }
                 catch (Exception e)
                 {
-                    this.ErrorCode = VSConstants.E_FAIL;
+                    ((CovidWindowControl)CovidToolWindow.Content).ShowErrorMessage(e.Message);
                 }
                 finally
                 {
-                    ThreadHelper.Generic.Invoke(() =>
-                    { 
-                        ((CovidWindowControl)m_toolWindow.Content).SearchResultsList = Sites; 
-                        ((CovidWindowControl)m_toolWindow.Content).DataContext = Sites; 
-                    });
+                    ThreadHelper.Generic.Invoke(() => { ((CovidWindowControl)CovidToolWindow.Content).DataContext = TestingSites; });
                 }
 
                 // Call the implementation of this method in the base class.
                 // This sets the task status to complete and reports task completion.
                 base.OnStartSearch();
-            }
-
-            protected override void OnStopSearch()
-            {
-                this.SearchResults = 0;
             }
         }
     }
